@@ -1,0 +1,198 @@
+<div class="flex h-screen bg-gray-900 text-gray-200">
+  <!-- Sidebar -->
+  <div class="w-64 border-r border-gray-800 flex flex-col">
+    <!-- Logo Section -->
+    <div class="p-4 border-b border-gray-800">
+      <div class="flex items-center gap-2 text-xl font-bold">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+        RAP-B
+      </div>
+      <div class="text-xs text-gray-400 mt-1">Sentiment Analysis & Document Chat</div>
+    </div>
+
+    <!-- Language Selection Dropdown -->
+    <!-- <div class="p-4 border-b border-gray-800">
+      <label for="language-select" class="text-sm text-gray-400">Select Language</label>
+      <select id="language-select" [(ngModel)]="selectedLanguage"
+        class="w-full p-2 mt-2 bg-gray-800 text-gray-200 rounded-lg">
+        <option value="en">English</option>
+        <option value="de">German</option>
+      </select>
+    </div> -->
+
+    <!-- Analysis Modes -->
+    <div class="p-4 border-b border-gray-800">
+      <div class="flex flex-col gap-2">
+        <button [class.bg-blue-600]="activeMode === 'chat'" (click)="setMode('chat')"
+          class="w-full p-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          Document Chat
+        </button>
+        <button [class.bg-blue-600]="activeMode === 'sentiment'" (click)="setMode('sentiment')"
+          class="w-full p-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Sentiment Analysis
+        </button>
+      </div>
+    </div>
+
+    <!-- Document List -->
+    <div *ngIf="activeMode !== 'sentiment'" class="flex-1 overflow-y-auto p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm text-gray-400">Uploaded Documents</h3>
+        <button (click)="triggerFileInput()" class="text-sm text-blue-400 hover:text-blue-300">
+          Upload New
+        </button>
+      </div>
+      <div class="space-y-2">
+        <div *ngFor="let doc of uploadedDocs; let i = index"
+          class="p-3 bg-gray-800 rounded-lg hover:bg-gray-700 cursor-pointer group">
+          <div class="flex items-start gap-2">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <div class="flex-1">
+              <div class="font-medium">{{ doc.name }}</div>
+              <div class="text-xs text-gray-400">{{ doc.type }}</div>
+            </div>
+            <button (click)="removeDocument(i); $event.stopPropagation()"
+              class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header -->
+    <div class="p-4 border-b border-gray-800">
+      <h2 class="text-xl font-semibold">
+        {{ activeMode === 'sentiment' ? 'Lyric Sentiment Analysis' : 'Document Chat' }}
+      </h2>
+      <p class="text-sm text-gray-400 mt-1">
+        {{ activeMode === 'sentiment' ?
+        'Analyze the sentiment of rap lyrics using our fine-tuned model' :
+        'Chat with your uploaded documents using RAG technology' }}
+      </p>
+    </div>
+
+    <!-- Chat/Analysis Area -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Inside the Chat/Analysis Area where messages are displayed -->
+      <div *ngFor="let message of messages" class="max-w-3xl mx-auto mb-6" [class.ml-auto]="message.sender === 'user'">
+        <div class="flex items-start gap-4" [class.flex-row-reverse]="message.sender === 'user'">
+          <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm">
+            {{ message.sender === 'user' ? 'U' : 'R' }}
+          </div>
+          <div class="flex-1 p-4 rounded-lg"
+            [class]="message.sender === 'user' ? 'bg-blue-600' : (message.error ? 'bg-red-900/50' : 'bg-gray-800')">
+            <div [class.whitespace-pre-line]="message.sender === 'bot'">{{ message.content }}</div>
+            <div *ngIf="message.sentiment" class="mt-2 text-sm flex items-center gap-2"
+              [class.text-green-400]="message.sentiment === 'positive'"
+              [class.text-red-400]="message.sentiment === 'negative'">
+              <svg *ngIf="message.sentiment === 'positive'" class="w-5 h-5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <svg *ngIf="message.sentiment === 'negative'" class="w-5 h-5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading indicator for messages -->
+      <div *ngIf="isLoading.message" class="max-w-3xl mx-auto mb-6">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <div class="flex-1 p-4 rounded-lg bg-gray-800">
+            <div class="flex gap-2">
+              <div class="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+              <div class="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-6 border-t border-gray-800">
+      <div class="max-w-3xl mx-auto">
+        <!-- File Drop Area (shown when no files uploaded) -->
+        <div *ngIf="!uploadedDocs.length && activeMode !== 'sentiment'"
+          class="mb-6 border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-blue-500
+          transition-colors relative"
+          (dragover)="handleDragOver($event)" (drop)="handleDrop($event)" (click)="triggerFileInput()">
+
+          <!-- Loading Overlay -->
+          <div *ngIf="isLoading.upload"
+            class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center rounded-lg">
+            <div class="text-center">
+              <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto">
+              </div>
+              <div class="mt-2 text-sm text-blue-400">Uploading... {{ uploadProgress.toFixed(0) }}%</div>
+            </div>
+          </div>
+
+          <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p class="text-gray-400">Drop your lyrics or documents here, or click to browse</p>
+          <p class="text-sm text-gray-500 mt-2">Supported formats: TXT, PDF</p>
+
+          <!-- Upload Error Message -->
+          <div *ngIf="errors.upload" class="mt-4 text-red-400 text-sm bg-red-900/20 p-2 rounded-lg">
+            {{ errors.upload }}
+          </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="relative">
+          <input type="text" [(ngModel)]="messageInput" (keyup.enter)="sendMessage()"
+            [placeholder]="getInputPlaceholder()" [disabled]="isLoading.message"
+            class="w-full bg-gray-800 rounded-lg pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+
+          <button (click)="sendMessage()" [disabled]="isLoading.message || !messageInput.trim()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-400 disabled:opacity-50">
+            <div *ngIf="isLoading.message"
+              class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin">
+            </div>
+            <svg *ngIf="!isLoading.message" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Message Error Display -->
+        <div *ngIf="errors.message" class="mt-4 text-red-400 text-sm bg-red-900/20 p-2 rounded-lg text-center">
+          {{ errors.message }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
